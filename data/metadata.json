@@ -1,0 +1,15 @@
+[
+    {
+      "text": "Q1 financial report: revenue up 10%.",
+      "access_roles": ["finance", "admin"]
+    },
+    {
+      "text": "Legal case summary for April.",
+      "access_roles": ["legal", "admin"]
+    },
+    {
+      "text": "Internal HR policy updates.",
+      "access_roles": ["hr", "admin"]
+    }
+  ]
+  
