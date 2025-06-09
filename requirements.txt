@@ -2,3 +2,8 @@ flask
 faiss-cpu
 numpy
 pandas
+transformers
+os
+pickle
+sentence_transformers
+datetime

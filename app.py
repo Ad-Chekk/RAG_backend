@@ -1,7 +1,9 @@
-# app.py
 
+from flask_cors import CORS
+#from flask_session 
 from flask import Flask, request, jsonify, session
 import numpy as np
+from datetime import timedelta
 
 from data_processing import df
 from auth import authenticate
@@ -9,10 +11,15 @@ from vector_store import search
 from rag_engine import get_rag_response
 
 app = Flask(__name__)
+
+app.permanent_session_lifetime = timedelta(days=1)
+
+CORS(app, supports_credentials=True, origins="http://localhost:3000")
+
 app.secret_key = "super-secret-key"
 embeddings = np.load("data/df_embeddings.npy")  # This ensures we match the dimension
 
-# ✅ Replace this with your real embedding model if needed
+# 
 def embed_query(text):
     # Random vector with same shape as the existing embeddings
     return np.random.rand(embeddings.shape[1]).astype("float32")
@@ -22,7 +29,8 @@ def login():
     data = request.json
     user = authenticate(data["username"], data["password"])
     if user:
-        session["user"] = user
+        session.permanent = True  #  Force session to persist
+        session["user"] = user    #  Store user info
         return jsonify({"message": "Login successful", "user": user})
     return jsonify({"error": "Invalid credentials"}), 401
 
@@ -33,8 +41,9 @@ def logout():
 
 @app.route("/rag-query", methods=["POST"])
 def rag_query():
-    if "user" not in session:
-        return jsonify({"error": "Unauthorized"}), 403
+    print("SESSION CONTENT:", session) 
+    # if "user" not in session:
+    #     return jsonify({"error": "Unauthorized"}), 403
 
     # query = request.json.get("query", "")
     # query_vector = embed_query(query)
@@ -59,9 +68,18 @@ def view_roles():
     if username != "Admin":
         return jsonify({"error": "Access denied"}), 403
 
-    # Convert first 10 rows of CSV to JSON (don't send all 26k!)
+    # Convert first 10 rows of CSV to JSON 
     sample_data = df.head(10).to_dict(orient="records")
     return jsonify({"rows": sample_data})
+
+
+###this should be changed when using https this is only compatible for localhost 
+app.config.update(
+    SESSION_COOKIE_SAMESITE="Lax",  # default works for most use cases
+    SESSION_COOKIE_SECURE=False,
+    SESSION_COOKIE_HTTPONLY=True,
+)
+
 
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=False)

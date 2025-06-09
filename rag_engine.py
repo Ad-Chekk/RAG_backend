@@ -1,4 +1,3 @@
-# rag_engine.py
 
 import os
 import numpy as np
@@ -8,13 +7,13 @@ import faiss
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, pipeline
 from sentence_transformers import SentenceTransformer
 
-# === Paths ===
+# Paths  for rag embedding files 
 DATA_DIR = "./data"
 EMBEDDING_FILE = os.path.join(DATA_DIR, "df_embeddings.npy")
 FAISS_INDEX_FILE = os.path.join(DATA_DIR, "df_faiss_index.index")
 METADATA_FILE = os.path.join(DATA_DIR, "df_doc_metadata.pkl")
 
-# === Load RAG Components ===
+# Load RAG Components 
 print("Loading embeddings, FAISS index, and metadata...")
 embeddings = np.load(EMBEDDING_FILE)
 index = faiss.read_index(FAISS_INDEX_FILE)
@@ -27,7 +26,7 @@ doc_mapping = dict(zip(range(len(doc_metadata)), doc_metadata["DOC_ID"].tolist()
 id_to_text = dict(zip(range(len(doc_metadata)), doc_metadata["combined_text"].tolist()))
 id_to_title = dict(zip(range(len(doc_metadata)), doc_metadata["DOC_TITL"].tolist()))
 
-# === Load Models ===
+# Model loading
 print("Loading embedding and generation models...")
 embedding_model = SentenceTransformer("intfloat/e5-large-v2")
 
@@ -35,8 +34,11 @@ tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-base")
 gen_model = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-base")
 generator = pipeline("text2text-generation", model=gen_model, tokenizer=tokenizer, max_length=512)
 
-# === Main RAG Function ===
+# Main RAG Function
 def get_rag_response(query_json: dict, top_k: int = 3) -> dict:
+    
+    #below is demo ofthe input and output
+    
     """
     Accepts query JSON: { "query": "your question" }
     Returns JSON: { "answer": ..., "context": ..., "documents": [...] }
@@ -45,14 +47,14 @@ def get_rag_response(query_json: dict, top_k: int = 3) -> dict:
     if not query:
         return {"error": "Query cannot be empty."}
 
-    # === Embed the query ===
+    #Embed the query
     query_embedding = embedding_model.encode(["query: " + query])
     faiss.normalize_L2(query_embedding)
 
-    # === Search FAISS index ===
+    # Search FAISS index
     scores, indices = index.search(query_embedding, top_k)
 
-    # === Prepare Context ===
+    # === Prepare Context
     retrieved_docs = []
     context_parts = []
     for i, idx in enumerate(indices[0]):
@@ -71,10 +73,10 @@ def get_rag_response(query_json: dict, top_k: int = 3) -> dict:
 
     context_text = "\n".join(context_parts)
 
-    # === Build Prompt ===
+    # Build Prompt
     prompt = f"Use the following documents to answer the question:\n\n{context_text}\nQuestion: {query}"
 
-    # === Generate Answer ===
+    #Generate Answer
     try:
         answer = generator(prompt)[0]["generated_text"]
     except Exception as e:
