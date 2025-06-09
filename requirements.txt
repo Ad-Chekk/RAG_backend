@@ -3,6 +3,4 @@ faiss-cpu
 numpy
 pandas
 transformers
-pickle
 sentence_transformers
-datetime
