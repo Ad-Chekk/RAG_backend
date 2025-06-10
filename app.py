@@ -5,7 +5,8 @@ from flask import Flask, request, jsonify, session
 import numpy as np
 from datetime import timedelta
 
-from data_processing import df
+import os
+# from data_processing import df
 from auth import authenticate
 from vector_store import search
 from rag_engine import get_rag_response
@@ -69,8 +70,10 @@ def view_roles():
         return jsonify({"error": "Access denied"}), 403
 
     # Convert first 10 rows of CSV to JSON 
-    sample_data = df.head(10).to_dict(orient="records")
-    return jsonify({"rows": sample_data})
+    # sample_data = df.head(10).to_dict(orient="records")
+    # return jsonify({"rows": sample_data})
+    return jsonify("hello")
+ 
 
 
 ###this should be changed when using https this is only compatible for localhost 
@@ -83,3 +86,9 @@ app.config.update(
 
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=False)
+    port = int(os.environ.get("PORT", 5000))  # use PORT env if available (Render sets it), else default to 5000
+    app.run(host="0.0.0.0", port=port, debug=True, use_reloader=False)
+
+
+ 
+    
