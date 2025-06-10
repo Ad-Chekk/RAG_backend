@@ -4,3 +4,4 @@ numpy
 pandas
 transformers
 sentence_transformers
+flask_cors
